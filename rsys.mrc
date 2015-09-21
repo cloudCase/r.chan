@@ -24,27 +24,27 @@ on *:LOAD: {
 
 ; Global Aliases
 alias r.chan {
-  if ($1 == +u) { $iif($2,r.auser $2,r.echo error syntax: /respect +u [user]) }
-  elseif ($1 == -u) { $iif($2,r.deluser $2,r.echo error syntax: /respect -u [user]) }
-  elseif ($1 == +o) { $iif($2,r.addown $2,r.echo error syntax: /respect +o [user]) }
-  elseif ($1 == -o) { $iif($2,r.delown $2,r.echo error syntax: /respect -o [user]) }
-  elseif ($1 == -m) { $iif($2,r.msg Console_Message $2-,r.echo error syntax: /respect -m [message]) }
+  if ($1 == +u) { $iif($2,r.auser $2,r.echo error syntax: /r.chan +u [user]) }
+  elseif ($1 == -u) { $iif($2,r.deluser $2,r.echo error syntax: /r.chan -u [user]) }
+  elseif ($1 == +o) { $iif($2,r.addown $2,r.echo error syntax: /r.chan +o [user]) }
+  elseif ($1 == -o) { $iif($2,r.delown $2,r.echo error syntax: /r.chan -o [user]) }
+  elseif ($1 == -m) { $iif($2,r.msg Console_Message $2-,r.echo error syntax: /r.chan -m [message]) }
   elseif ($1 == +m) { r.echo memlist $r.memlist }
 }
 ; Local Aliases
 alias -l r.add { r.auser $2 | r.msg useradd $1 added $2 to the members list. }
 alias -l r.oadd { r.addown $2 | r.msg owneradd $1 added $2 to the owner list }
-alias -l r.auser { writeini respect\settings.ini members all $addtok($r.memlist,$1,32) | r.echo useradd User $1 added as member. }
-alias -l r.deluser { writeini respect\settings.ini members all $remtok($r.memlist,$2) | r.echo userdel User $1 removed from members list. }
-alias -l r.addown { writeini respect\settings.ini members own $addtok($r.ownlist,$1,32) | r.echo ownadd User $1 added to Owner list. }
-alias -l r.delown { writeini respect\settings.ini members own $remtok($r.ownlist,$1) | r.echo owndel User $1 removed from Owner list. }
-alias -l r.ownlist { return $readini(respect\settings.ini,members,own) }
-alias -l r.memlist { return $readini(respect\settings.ini,members,all) }
+alias -l r.auser { writeini r.chan\settings.ini members all $addtok($r.memlist,$1,32) | r.echo useradd User $1 added as member. }
+alias -l r.deluser { writeini r.chan\settings.ini members all $remtok($r.memlist,$2) | r.echo userdel User $1 removed from members list. }
+alias -l r.addown { writeini r.chan\settings.ini members own $addtok($r.ownlist,$1,32) | r.echo ownadd User $1 added to Owner list. }
+alias -l r.delown { writeini r.chan\settings.ini members own $remtok($r.ownlist,$1) | r.echo owndel User $1 removed from Owner list. }
+alias -l r.ownlist { return $readini(r.chan\settings.ini,members,own) }
+alias -l r.memlist { return $readini(r.chan\settings.ini,members,all) }
 alias -l r.mem { return $iif($1 isin $r.memlist,$true,$null) }
 alias -l r.own { return $iif($1 isin $r.ownlist,$true,$null) }
 alias -l r.msg { msg $r.chan_chan $r.chan_pre $+([,$1,]) $2- }
 alias -l r.echo { echo -agt $r.chan_pre $+([,$1,]) $2- }
-alias -l r.dbg { if (!$window(@respect)) { window -E @respect } | echo -gt @respect (respect) [debug] $1- }
+alias -l r.dbg { if (!$window(@r.chan)) { window -E @r.chan } | echo -gt @r.chan $r.chan_pre [debug] $1- }
 alias -l r.invite { notice $2 You have been invited to join $r.chan_chan. | r.msg invite $2 has been invited. }
 alias -l r.topic { topic $r.chan_chan $1- | set %r.topic $1- }
 alias -l r.check { return $iif($r.own($1),owner,$iif($r.mem($1),member,zero)) }
@@ -113,7 +113,7 @@ on *:JOIN:#: {
   if ($nick == $me) { halt }
   if ($r.mem($nick)) {
     r.msg entry Welcome, $nick $+ !
-    mode $chan +v #nick
+    mode $chan +v $nick
     if ($r.own($nick)) { mode $chan +ao $nick $nick }
   }
   else { mode $chan +b $address($nick,4) | kick $chan $nick You are not an authorized user }
@@ -130,11 +130,11 @@ on *:TOPIC:#: {
 on *:CONNECT: { join $r.chan_chan }
 
 ; Relay
-#r.relay off
+#r.relay on
 on ^*:TEXT:*:#: { if ($chan !== $r.chan_chan) { halt } | r.relay $nick $1- }
 on ^*:JOIN:#: { if ($chan !== $r.chan_chan) { halt } | r.relay JOIN $nick ( $+ $fulladdress $+ ) }
 on ^*:PART:#: { if ($chan !== $r.chan_chan) { halt } | r.relay PART $nick ( $+ $fulladdress $+ ) $iif($1,$+([,$1-,]) }
-on ^*:RAWMODE:#: { if ($chan !== $r.chan_chan) { halt } | r.relau MODE $nick - $1- }
+on ^*:RAWMODE:#: { if ($chan !== $r.chan_chan) { halt } | r.relay MODE $nick - $1- }
 on ^*:TOPIC:#: { if ($chan !== $r.chan_chan) { halt } | r.relay TOPIC $nick - $1- }
 on ^*:ACTION:#: { if ($chan !== $r.chan_chan) { halt } | r.relay * $nick $1- }
 #r.relay end 
