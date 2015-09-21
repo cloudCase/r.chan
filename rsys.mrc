@@ -130,7 +130,7 @@ on *:TOPIC:#: {
 on *:CONNECT: { join $r.chan_chan }
 
 ; Relay
-#r.relay on
+#r.relay off
 on ^*:TEXT:*:#: { if ($chan !== $r.chan_chan) { halt } | r.relay $nick $1- }
 on ^*:JOIN:#: { if ($chan !== $r.chan_chan) { halt } | r.relay JOIN $nick ( $+ $fulladdress $+ ) }
 on ^*:PART:#: { if ($chan !== $r.chan_chan) { halt } | r.relay PART $nick ( $+ $fulladdress $+ ) $iif($1,$+([,$1-,]) }
